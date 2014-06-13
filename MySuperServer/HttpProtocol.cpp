@@ -38,7 +38,7 @@ HANDLE	CHttpProtocol::None = NULL;
 CHttpProtocol::CHttpProtocol(void)
 {
 	m_pListenThread = NULL;	
-	m_hwndDlg = NULL;
+	//m_hwndDlg = NULL;
 }
 
 CHttpProtocol::~CHttpProtocol(void)
@@ -77,9 +77,7 @@ bool CHttpProtocol::StartHttpSrv()
 	if (m_listenSocket == INVALID_SOCKET)
 	{
 		// 异常处理
-		CString *pStr = new CString;
-		*pStr = "Could not create listen socket";
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		printf("error: Could not create listen socket\n");
 		return false;
 	}
 
@@ -100,7 +98,7 @@ bool CHttpProtocol::StartHttpSrv()
 		}
 		else
 		{
-			sockAddr.sin_port = htons(HTTPPORT);	// 默认端口HTTPPORT＝80
+			sockAddr.sin_port = htons(HTTPPORT);	// 默认端口HTTPPORT＝808
 		}
 	}
 
@@ -116,9 +114,7 @@ bool CHttpProtocol::StartHttpSrv()
 	if (nRet == SOCKET_ERROR)
 	{  
 		// 绑定发生错误
-		CString *pStr = new CString;
-		*pStr = "bind() error";
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		printf("error bind() error\n");
 		closesocket(m_listenSocket);	// 断开链接
 		return false;
 	}
@@ -128,9 +124,7 @@ bool CHttpProtocol::StartHttpSrv()
 	if (nRet == SOCKET_ERROR)
 	{   
 		// 异常处理
-		CString *pStr = new CString;
-		*pStr = "listen() error";
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		printf("error listen() error\n");
 		closesocket(m_listenSocket);	// 断开链接
 		return false;
 	}
@@ -140,14 +134,11 @@ bool CHttpProtocol::StartHttpSrv()
 	if (!m_pListenThread)
 	{
 		// 线程创建失败
-		CString *pStr = new CString;
-		*pStr = "Could not create listening thread" ;
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		printf("error Could not create listening thread\n");
 		closesocket(m_listenSocket);	// 断开链接
 		return false;
 	}
-
-	CString strIP, strTemp;
+	char* strIP=NULL;
 	char hostname[255];
 	PHOSTENT hostinfo;
 	// 获取计算机名
@@ -162,18 +153,12 @@ bool CHttpProtocol::StartHttpSrv()
 	}
 	
 	// 显示web服务器正在启动
-	CString *pStr = new CString;
-	*pStr = "****** My WebServer is Starting now! *******";
-	SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+	printf("****** My WebServer is Starting now! *******\n");
 
 	// 显示web服务器的信息，包括主机名，IP以及端口号
-	CString *pStr1 = new CString;
-	pStr1->Format("%s", hostname); 
-	*pStr1 = *pStr1 + "[" + strIP + "]" + "   Port ";
-	strTemp.Format("%d", htons(sockAddr.sin_port));
-	*pStr1 = *pStr1 + strTemp;
-	SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr1, NULL);
-	
+
+	printf("%s [ %s ] %d\n",hostname,strIP,htons(sockAddr.sin_port));
+	WaitForSingleObject(m_pListenThread->m_hThread,INFINITE);
 	return true;
 
 }
@@ -283,7 +268,7 @@ UINT CHttpProtocol::ListenThread(LPVOID param)
 		// 将客户端网络地址转换为用点分割的IP地址
 		CString *pstr = new CString;
 		pstr->Format("%s Connecting on socket:%d", inet_ntoa(SockAddr.sin_addr), socketClient);
-		SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pstr, NULL);
+		//SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pstr, NULL);
 
         pReq = new REQUEST;
 		if (pReq == NULL)
@@ -291,7 +276,7 @@ UINT CHttpProtocol::ListenThread(LPVOID param)
 			// 处理错误
 			CString *pStr = new CString;
 			*pStr = "No memory for request";
-			SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+			//SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 			continue;
 		}
 		pReq->hExit  = pHttpProtocol->m_hExit;
@@ -308,7 +293,7 @@ UINT CHttpProtocol::ListenThread(LPVOID param)
 			// 线程创建失败,错误处理
 			CString *pStr = new CString;
 			*pStr = "Couldn't start client thread";
-			SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+			//SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 
 			delete pReq;
 		}
@@ -322,7 +307,7 @@ UINT CHttpProtocol::ListenThread(LPVOID param)
 		// 超时返回，并且同步对象未退出
 		CString *pStr = new CString;
 		*pStr = "One or more client threads did not exit";
-		SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		//SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 	}
 	pHttpProtocol->DeleteClientCount();
 
@@ -335,7 +320,7 @@ UINT CHttpProtocol::ClientThread(LPVOID param)
 	BYTE buf[1024];
 	PREQUEST pReq = (PREQUEST)param;
 	CHttpProtocol *pHttpProtocol = (CHttpProtocol *)pReq->pHttpProtocol;
-
+   printf("Http server is visited.\n");
 	pHttpProtocol->CountUp();			// 记数
 	
 	// 接收request data
@@ -354,7 +339,7 @@ UINT CHttpProtocol::ClientThread(LPVOID param)
 		// 处理错误
 		CString *pStr = new CString;
 		*pStr = "Error occurs when analyzing client request";
-		SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		//SendMessage(pHttpProtocol->m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 
 		pHttpProtocol->Disconnect(pReq);
 		delete pReq;
@@ -545,7 +530,7 @@ void CHttpProtocol::SendFile(PREQUEST pReq)
 
 	CString *pStr = new CString;
 	*pStr = *pStr + &pReq->szFileName[strlen(m_strRootDir)];
-	SendMessage(m_hwndDlg, LOG_MSG, UINT(pStr), NULL);	
+	//SendMessage(m_hwndDlg, LOG_MSG, UINT(pStr), NULL);	
    
 
 	static BYTE buf[2048];
@@ -587,7 +572,7 @@ void CHttpProtocol::SendFile(PREQUEST pReq)
 	{
 		CString *pStr = new CString;
 		*pStr = "Error occurs when closing file";
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 	}
 }
 
@@ -620,7 +605,7 @@ bool CHttpProtocol::SendBuffer(PREQUEST pReq, LPBYTE pBuf, DWORD dwBufSize)
 		{	
 			CString *pStr = new CString;
 			pStr->Format("WSASend() error: %d", WSAGetLastError() );
-			SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+			//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 
 			CloseHandle(over.hEvent);
 			return false;
@@ -642,7 +627,7 @@ bool CHttpProtocol::SendBuffer(PREQUEST pReq, LPBYTE pBuf, DWORD dwBufSize)
 			// 错误处理
 			CString *pStr = new CString;
 			pStr->Format("WSAGetOverlappedResult() error: %d", WSAGetLastError() );
-			SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+			//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 			CloseHandle(over.hEvent);
 			return false;
 		}
@@ -657,7 +642,7 @@ void CHttpProtocol::Disconnect(PREQUEST pReq)
 	int	nRet;
 	CString *pStr = new CString;
 	pStr->Format("Closing socket: %d", pReq->Socket);
-	SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+	//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 	
 	nRet = closesocket(pReq->Socket);
 	if (nRet == SOCKET_ERROR)
@@ -665,13 +650,13 @@ void CHttpProtocol::Disconnect(PREQUEST pReq)
 		// 处理错误
 		CString *pStr1 = new CString;
 		pStr1->Format("closesocket() error: %d", WSAGetLastError() );
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr1, NULL);
+		//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr1, NULL);
 	}
 
 	HTTPSTATS	stats;
 	stats.dwRecv = pReq->dwRecv;
 	stats.dwSend = pReq->dwSend;
-	SendMessage(m_hwndDlg, DATA_MSG, (UINT)&stats, NULL);
+	//SendMessage(m_hwndDlg, DATA_MSG, (UINT)&stats, NULL);
 }
 
 HANDLE CHttpProtocol::InitClientCount()
@@ -770,11 +755,11 @@ void CHttpProtocol::StopHttpSrv()
 	{
 		CString *pStr = new CString;
 		*pStr = "TIMEOUT waiting for ListenThread";
-		SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
+		//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr, NULL);
 	}
 	CloseHandle(m_hExit);
 
 	CString *pStr1 = new CString;
 	*pStr1 = "Server Stopped";
-	SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr1, NULL);
+	//SendMessage(m_hwndDlg, LOG_MSG, (UINT)pStr1, NULL);
 }

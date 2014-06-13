@@ -1,6 +1,0 @@
-# depslib dependency file v1.0
-1402552738 source:j:\program\ftpserver\main.cpp
-	<stdio.h>
-	<winsock.h>
-	<stdlib.h>
-

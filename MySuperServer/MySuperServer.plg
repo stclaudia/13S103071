@@ -1,0 +1,39 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: MySuperServer - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\lxq\AppData\Local\Temp\RSPF367.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /Fp"Debug/MySuperServer.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\Users\lxq\Desktop\例子程序\13S103050_李肖强\13S103050_李肖强\MySuperServer\MySuperServer.cpp"
+]
+Creating command line "cl.exe @C:\Users\lxq\AppData\Local\Temp\RSPF367.tmp" 
+Creating temporary file "C:\Users\lxq\AppData\Local\Temp\RSPF368.tmp" with contents
+[
+ws2_32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/MySuperServer.pdb" /debug /machine:I386 /out:"Debug/MySuperServer.exe" /pdbtype:sept 
+".\Debug\HttpProtocol.obj"
+".\Debug\MySuperServer.obj"
+".\Debug\StdAfx.obj"
+".\Debug\MySuperServer.res"
+]
+Creating command line "link.exe @C:\Users\lxq\AppData\Local\Temp\RSPF368.tmp"
+<h3>Output Window</h3>
+Compiling...
+MySuperServer.cpp
+d:\program files\vc98\include\xlocale(467) : warning C4786: 'std::reverse_bidirectional_iterator<std::_Tree<CString,std::pair<CString const ,char *>,std::map<CString,char *,std::less<CString>,std::allocator<char *> >::_Kfn,std::less<CString>,std::allocator<char *> >::iterator,std::pair<CString const ,char *>,std::pair<CString const ,char *> &,std::pair<CString const ,char *> *,int>' : identifier was truncated to '255' characters in the debug information
+d:\program files\vc98\include\xlocale(467) : warning C4786: 'std::reverse_bidirectional_iterator<std::_Tree<CString,std::pair<CString const ,char *>,std::map<CString,char *,std::less<CString>,std::allocator<char *> >::_Kfn,std::less<CString>,std::allocator<char *> >::const_iterator,std::pair<CString const ,char *>,std::pair<CString const ,char *> const &,std::pair<CString const ,char *> const *,int>' : identifier was truncated to '255' characters in the debug information
+d:\program files\vc98\include\xlocale(467) : warning C4786: 'std::pair<std::_Tree<CString,std::pair<CString const ,char *>,std::map<CString,char *,std::less<CString>,std::allocator<char *> >::_Kfn,std::less<CString>,std::allocator<char *> >::iterator,std::_Tree<CString,std::pair<CString const ,char *>,std::map<CString,char *,std::less<CString>,std::allocator<char *> >::_Kfn,std::less<CString>,std::allocator<char *> >::iterator>' : identifier was truncated to '255' characters in the debug information
+d:\program files\vc98\include\xlocale(467) : warning C4786: 'std::pair<std::_Tree<CString,std::pair<CString const ,char *>,std::map<CString,char *,std::less<CString>,std::allocator<char *> >::_Kfn,std::less<CString>,std::allocator<char *> >::const_iterator,std::_Tree<CString,std::pair<CString const ,char *>,std::map<CString,char *,std::less<CString>,std::allocator<char *> >::_Kfn,std::less<CString>,std::allocator<char *> >::const_iterator>' : identifier was truncated to '255' characters in the debug information
+Linking...
+
+
+
+<h3>Results</h3>
+MySuperServer.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

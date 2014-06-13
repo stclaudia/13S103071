@@ -7,7 +7,8 @@
 #include <winsock2.h>
 #include <afxmt.h>
 
-#define HTTPPORT 80
+#define HTTPPORT 808
+#define HTTPROOTDIR "C://temp/"
 #define METHOD_GET 0
 #define METHOD_HEAD 1
 
@@ -64,7 +65,7 @@ class CHttpProtocol
 {
 public:
 
-	HWND m_hwndDlg;
+	//HWND m_hwndDlg;
 
 	SOCKET m_listenSocket;
 
