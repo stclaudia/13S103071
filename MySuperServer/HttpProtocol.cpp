@@ -98,7 +98,7 @@ bool CHttpProtocol::StartHttpSrv()
 		}
 		else
 		{
-			sockAddr.sin_port = htons(HTTPPORT);	// 默认端口HTTPPORT＝808
+			sockAddr.sin_port = htons(HTTPPORT);	// 默认端口HTTPPORT＝80
 		}
 	}
 
@@ -156,7 +156,11 @@ bool CHttpProtocol::StartHttpSrv()
 	printf("****** My WebServer is Starting now! *******\n");
 
 	// 显示web服务器的信息，包括主机名，IP以及端口号
-
+	//CString *pStr1 = new CString;
+	//pStr1->Format("%s", hostname); 
+	//*pStr1 = *pStr1 + "[" + strIP + "]" + "   Port ";
+	//strTemp.Format("%d", htons(sockAddr.sin_port));
+	//*pStr1 = *pStr1 + strTemp;
 	printf("%s [ %s ] %d\n",hostname,strIP,htons(sockAddr.sin_port));
 	WaitForSingleObject(m_pListenThread->m_hThread,INFINITE);
 	return true;
@@ -320,7 +324,7 @@ UINT CHttpProtocol::ClientThread(LPVOID param)
 	BYTE buf[1024];
 	PREQUEST pReq = (PREQUEST)param;
 	CHttpProtocol *pHttpProtocol = (CHttpProtocol *)pReq->pHttpProtocol;
-   printf("Http server is visited.\n");
+
 	pHttpProtocol->CountUp();			// 记数
 	
 	// 接收request data

@@ -30,8 +30,8 @@ using namespace std;
 #define MAX_REQ_LEN     256
 #define MAX_ADDR_LEN    80
 
-#define FTP_PORT        210     // FTP 控制端口
-#define DATA_FTP_PORT   200     // FTP 数据端口
+#define FTP_PORT        21     // FTP 控制端口
+#define DATA_FTP_PORT   20     // FTP 数据端口
 
 #define USER_OK         331
 #define LOGGED_IN       230
@@ -47,8 +47,7 @@ using namespace std;
 #define REPLY_MARKER    504
 #define PASSIVE_MODE    227
 
-#define FTP_USER		"toldo"
-#define FTP_PASS		"toldo"
+
 #define DEFAULT_HOME_DIR    "C:\\TEMP"
 
 #define MAX_FILE_NUM        1024
@@ -100,6 +99,7 @@ CRITICAL_SECTION g_cs;
 char  g_szLocalAddr[MAX_ADDR_LEN]; 
 BOOL  g_bLoggedIn;
 
+//my ftp with client's
 #include <stdio.h>
 #include <winsock.h>
 #include <stdlib.h>
@@ -130,124 +130,15 @@ void HandleError(char *func);
 
 
 
-int sdirfun(SOCKET newsocket)
-{
-    char temp_buffer[80];
-    FILE *fin;
-
-    printf("Equivalent to dir \n");
-    order[0]='\0';
-    strcat(order,"dir ");
-    strcat(order,path);
-    strcat(order," >tmp.txt");
-    system(order);
-
-    fin=fopen("tmp.txt","r");
-    sprintf(sbuffer, "125 Transfering... \r\n");
-    bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-    while (fgets(temp_buffer,80,fin)!=NULL)
-    {
-        sprintf(sbuffer,"%s",temp_buffer);
-        if(port_connect==0)
-            send(newsocket, sbuffer, strlen(sbuffer), 0);
-    }
-
-    fclose(fin);
-    sprintf(sbuffer, "226 Transfer completed... \r\n");
-    bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-    system("del tmp.txt");
-
-    //CLOSE the ns_data SOCKET or data port SOCKET
-    if(port_connect==0)
-    {
-        closesocket(ns_data);
-        sprintf(sbuffer,"226 Close the data socket... \r\n");
-        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-        ns_data = socket(AF_INET, SOCK_STREAM, 0);
-    }
-
-    sy_error=0;
-    return 0;
-}
-
-
-int sgetfun(SOCKET newsocket)
-{
-    int i=4,k=0;
-    char filename[20],temp_buffer[80];
-    char *p_filename=order;
-    FILE *fp;
-
-    printf("RETR mode.\r\n");
-    // identify the filename from rbuffer after the word "RETR "
-    while (1) // while loop 4
-    {
-        //RECEIVE
-        bytes = recv(newsocket, &rbuffer[i], 1, 0);
-        printf("rbuffer[i]=%c\n",rbuffer[i]);
-
-        if ((bytes < 0) || (bytes == 0))
-            break;
-
-        filename[k]=rbuffer[i];
-        if (rbuffer[i] == '\0')
-        {   /*end on LF*/
-            filename[k] = '\0';
-            break;
-        }
-
-        if (rbuffer[i] != '\r')
-        {
-            i++;
-            k++;/*ignore CR's*/
-        }
-    } // end of while loop 4
-
-    order[0]='\0';
-    strcat(order,path);
-    if(strlen(path)>0)
-        strcat(order,"\\");
-    strcat(order,filename);
-
-
-    if( (fp=fopen(p_filename,"r")) == NULL )
-    {
-        sprintf(sbuffer, "Sorry, cannot open %s. Please try again.\r\n",filename);
-        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-        sprintf(sbuffer, "226 Transfer completed... \r");
-        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-        return 1;
-    }
-    else
-    {
-        printf("The file %s found,ready to transfer.\n",filename);
-        sprintf(sbuffer, "125 Transfering... \r\n");
-        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-        while (fgets(temp_buffer,80,fp)!=NULL)
-        {
-            sprintf(sbuffer,"%s",temp_buffer); //
-            if(port_connect==0)
-                send(newsocket, sbuffer, strlen(sbuffer), 0);
-        }//end of while
-
-        fclose(fp);
-
-    }
-
-    sy_error=0;
-    return 0;
-}
 
 
 
 
 
-void HandleError(char *func)
-{
-    char info[65]= {0};
-    _snprintf(info, 64, "%s: %d\n", func, WSAGetLastError());
-    printf(info);
-}
+
+
+
+
 
 
 
@@ -266,12 +157,12 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	{
 		// TODO: code your application's behavior here.
 		m_pServerThread[0] = AfxBeginThread(HttpServerThread,NULL);
-		m_pServerThread[1] = AfxBeginThread(FtpServerThread1,NULL);
-		m_pServerThread[2] = AfxBeginThread(FtpServerThread2,NULL);
+		m_pServerThread[1] = AfxBeginThread(FtpServerThread,NULL);
+				m_pServerThread[2] = AfxBeginThread(FtpServerThread2,NULL);
 		HANDLE * tmp = new HANDLE[3];
 		tmp[0] = m_pServerThread[0]->m_hThread;
 		tmp[1] = m_pServerThread[1]->m_hThread;
-		tmp[2] = m_pServerThread[2]->m_hThread;
+				tmp[2] = m_pServerThread[2]->m_hThread;
 		WaitForMultipleObjects(3,tmp,true,INFINITE);
 	}
 	//getchar();
@@ -279,7 +170,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 }
 UINT HttpServerThread(LPVOID param)
 {
-	cout<<"this is http server\n"<<endl;
+	cout<<"this is http server"<<endl;
 	pHttpProtocol = new CHttpProtocol;
 	pHttpProtocol->m_strRootDir = HTTPROOTDIR;
 	pHttpProtocol->m_nPort = HTTPPORT;
@@ -291,127 +182,7 @@ UINT HttpServerThread(LPVOID param)
 	}
 	return 0;
 }
-
-
-
-UINT FtpServerThread1(LPVOID param)
-{
-
-	
-	cout<<"this is ftp server with client."<<endl;
-
-   //---------------------------------part-----------------------
-
-	
-port_connect=0;            //port connect flag
-
-    struct sockaddr_in localaddr;//local address structure
-    SOCKET s;//s_data;//welcome socket and welcome socket for data connection,and port connection for connect to client
-    int addr_inlen;//address lenght variable
-
-    if(WSAStartup(MAKEWORD(2,2), &wsd) != 0)
-    {
-        WSACleanup();
-        printf("WSAStartup failed\n");
-    }
-    memset(&localaddr,0,sizeof(localaddr));//clear localaddr
-    s = socket(PF_INET, SOCK_STREAM, 0);
-
-    if (s <0)
-    {
-        printf("socket failed\n");
-    }
-
-    localaddr.sin_family = AF_INET;
-    localaddr.sin_port = htons(2302);
-    localaddr.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(s,(struct sockaddr *)(&localaddr),sizeof(localaddr)) < 0)
-    {
-        printf("Bind failed!\n");
-    }
-
-
-    while (1) // while loop 1
-    {
-        //LISTEN
-        listen(s,3);
-        addr_inlen = sizeof(remoteaddr);
-
-        //ACCEPT main connection (control connection)
-        newsocket = accept(s,(struct sockaddr *)(&remoteaddr),&addr_inlen);
-        if (newsocket == INVALID_SOCKET) break;
-            printf("connected to      %s at port %d \n",inet_ntoa(remoteaddr.sin_addr),ntohs(localaddr.sin_port));
-
-        //Respond with welcome message, FTP client requires those
-        sprintf(sbuffer,"Welcome \r\n");
-        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-
-        //INFINITE LOOP
-        while (1) // while loop 2
-        {
-            n = 0;
-            sy_error=1;
-            while (1) // while loop 3
-            {
-                //RECEIVE
-                bytes = recv(newsocket, &rbuffer[n], 1, 0);
-                printf("rbuffer[%d]=%c\n",n,rbuffer[n]);
-                if ((bytes < 0) || (bytes == 0))
-                    break;
-                if (rbuffer[n] == '$')
-                {
-                    rbuffer[n] = '\0';
-                    break;
-                }
-                if (rbuffer[n] != '\r')
-                    n++;
-            } // end of while loop 3
-
-            if ((bytes < 0) || (bytes == 0))
-                break;
-            printf("#The Server receives:# '%s' from client \n", rbuffer);
-
-            //THE FTP COMMANDS HERE
-            //LIST
-            if(strncmp(rbuffer,"dir",3)==0)
-            {
-                sdirfun(newsocket);
-            }
-
-
-            //GET
-            if (strncmp(rbuffer,"get",3)==0)
-            {
-                sgetfun(newsocket);
-            }
-
-
-            //Syntax error
-            if (sy_error==1)
-            {
-                printf("command unrecognized, non-implemented!\n");
-                sprintf(sbuffer, "500 Syntax error. \n");
-                bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
-            }
-        } // end of while loop 2
-
-        //CLOSE CONTROL SOCKET
-        closesocket(newsocket);
-        printf("disconnected from %s at port %d, close control socket.\n",inet_ntoa(remoteaddr.sin_addr),ntohs(localaddr.sin_port));
-    } // end of while loop 1
-
-    //CLOSE WELCOME SOCKET
-    closesocket(s);
-    printf("Welcome sockets close");
-    return 0;
-
-
-}
-
-
-
-UINT FtpServerThread2(LPVOID param)
+UINT FtpServerThread(LPVOID param)
 {
 	cout<<"this is ftp server"<<endl;
 	WSADATA wsaData;
@@ -551,6 +322,150 @@ UINT FtpServerThread2(LPVOID param)
 	return 0;
 }
 
+UINT FtpServerThread2(LPVOID param)
+{
+
+	
+	cout<<"this is ftp server with client."<<endl;
+
+   //---------------------------------part-----------------------
+
+	
+port_connect=0;            //port connect flag
+
+    struct sockaddr_in localaddr;//local address structure
+    SOCKET s;//s_data;//welcome socket and welcome socket for data connection,and port connection for connect to client
+    int addr_inlen;//address lenght variable
+
+    if(WSAStartup(MAKEWORD(2,2), &wsd) != 0)
+    {
+        WSACleanup();
+        printf("WSAStartup failed\n");
+    }
+    memset(&localaddr,0,sizeof(localaddr));//clear localaddr
+    s = socket(PF_INET, SOCK_STREAM, 0);
+
+    if (s <0)
+    {
+        printf("socket failed\n");
+    }
+
+    localaddr.sin_family = AF_INET;
+    localaddr.sin_port = htons(2302);
+    localaddr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(s,(struct sockaddr *)(&localaddr),sizeof(localaddr)) < 0)
+    {
+        printf("Bind failed!\n");
+    }
+
+
+    while (1) // while loop 1
+    {
+        //LISTEN
+        listen(s,3);
+        addr_inlen = sizeof(remoteaddr);
+
+        //ACCEPT main connection (control connection)
+        newsocket = accept(s,(struct sockaddr *)(&remoteaddr),&addr_inlen);
+        if (newsocket == INVALID_SOCKET) break;
+            printf("connected to      %s at port %d \n",inet_ntoa(remoteaddr.sin_addr),ntohs(localaddr.sin_port));
+
+        //Respond with welcome message, FTP client requires those
+        sprintf(sbuffer,"220 Welcome \r\n");
+        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+		   sprintf(sbuffer,"530 Log in \r\n");
+        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+
+
+        //INFINITE LOOP
+        while (1) // while loop 2
+        {
+            n = 0;
+            sy_error=1;
+            while (1) // while loop 3
+            {
+                //RECEIVE
+                bytes = recv(newsocket, &rbuffer[n], 1, 0);
+                printf("rbuffer[%d]=%c\n",n,rbuffer[n]);
+                if ((bytes < 0) || (bytes == 0))
+                    break;
+                if (rbuffer[n] == '$')
+                {
+                    rbuffer[n] = '\0';
+                    break;
+                }
+                if (rbuffer[n] != '\r')
+                    n++;
+            } // end of while loop 3
+
+            if ((bytes < 0) || (bytes == 0))
+                break;
+            printf("#The Server receives:# '%s' from client \n", rbuffer);
+
+            //THE FTP COMMANDS HERE
+            //LIST
+            if(strncmp(rbuffer,"dir",3)==0)
+            {
+                sdirfun(newsocket);
+            }
+
+
+            //GET
+            if (strncmp(rbuffer,"get",3)==0)
+            {
+                sgetfun(newsocket);
+            }
+
+
+            //Syntax error
+            if (sy_error==1)
+            {
+                printf("command unrecognized, non-implemented!\n");
+                sprintf(sbuffer, "500 Syntax error. \n");
+                bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+            }
+        } // end of while loop 2
+
+        //CLOSE CONTROL SOCKET
+        closesocket(newsocket);
+        printf("disconnected from %s at port %d, close control socket.\n",inet_ntoa(remoteaddr.sin_addr),ntohs(localaddr.sin_port));
+    } // end of while loop 1
+
+    //CLOSE WELCOME SOCKET
+    closesocket(s);
+    printf("Welcome sockets close");
+    return 0;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -619,7 +534,7 @@ DWORD WINAPI ProcessTreadIO(LPVOID lpParameter)
 	  {
 		  memcpy( &pSI->buffRecv[pSI->dwBytesRecv],pSI->wsaBuf.buf,dwBytesTransferred);
 		  pSI->dwBytesRecv += dwBytesTransferred;
-		  printf( "接受:%s\n",pSI->buffRecv);
+	//	  printf( "接受:%s\n",pSI->buffRecv);
 		  if( pSI->buffRecv[pSI->dwBytesRecv-2] == '\r'      // 要保证最后是\r\n
 				&& pSI->buffRecv[pSI->dwBytesRecv-1] == '\n' 
 				&& pSI->dwBytesRecv > 2 )  
@@ -639,7 +554,9 @@ DWORD WINAPI ProcessTreadIO(LPVOID lpParameter)
 			 pSI->dwBytesRecv = 0;
 		  }
 	  } 
+	  
 	  else
+/*	  */
 	  {
 		  pSI->dwBytesSend += dwBytesTransferred;
 	  }
@@ -697,14 +614,14 @@ int RecvReq( LPSOCKET_INF pSI )
 //显示欢迎消息
 BOOL WelcomeInfo( SOCKET s )
 {
-	char* szWelcomeInfo = "欢迎...\r\n";
+	char* szWelcomeInfo = "220 欢迎您登录到Mini FtpServer...\r\n";
 	if( send( s,szWelcomeInfo,strlen(szWelcomeInfo),0 ) == SOCKET_ERROR ) 
 	{
 		printf("Ftp client error:%d\n", WSAGetLastError() );
 		return FALSE;
 	}
 	// 刚进来，还没连接，故设置初始状态为false
-	g_bLoggedIn = FALSE;
+	g_bLoggedIn = 0;
 	return TRUE;
 }
 //登录函数
@@ -730,19 +647,10 @@ int LoginIn( LPSOCKET_INF pSocketInfo  )
 	{
 		sprintf(szPwd,"%s",pSI->buffRecv+strlen("PASS")+1 );
 		strtok( szPwd,"\r\n");
-		// 判断用户名跟口令正确性
-		if( stricmp( szPwd,FTP_PASS) || stricmp(szUser,FTP_USER) ) 
-		{
-			sprintf(pSI->buffSend,"530 User %s cannot log in.\r\n",szUser );
-			printf("User %s cannot log in\n",szUser );
-			nRetVal = LOGIN_FAILED;
-		} 
-		else 
-		{
+	
 			sprintf(pSI->buffSend,"%s",szLoggedIn);
 			printf("User %s logged in\n",szUser );
 			nRetVal = LOGGED_IN;
-		}
 		if( SendRes( pSI ) == -1 ) 
 			return -1;
 	}
@@ -1406,4 +1314,123 @@ char* AbsoluteDirectory( char* szDir )
 	return NetToHost(szDir);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
+//ftp with client 
 
+int sdirfun(SOCKET newsocket)
+{
+    char temp_buffer[80];
+    FILE *fin;
+
+    printf("Equivalent to dir \n");
+    order[0]='\0';
+    strcat(order,"dir ");
+    strcat(order,path);
+    strcat(order," >tmp.txt");
+    system(order);
+
+    fin=fopen("tmp.txt","r");
+    sprintf(sbuffer, "125 Transfering... \r\n");
+    bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+    while (fgets(temp_buffer,80,fin)!=NULL)
+    {
+        sprintf(sbuffer,"%s",temp_buffer);
+        if(port_connect==0)
+            send(newsocket, sbuffer, strlen(sbuffer), 0);
+    }
+
+    fclose(fin);
+    sprintf(sbuffer, "226 Transfer completed... \r\n");
+    bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+    system("del tmp.txt");
+
+    //CLOSE the ns_data SOCKET or data port SOCKET
+    if(port_connect==0)
+    {
+        closesocket(ns_data);
+        sprintf(sbuffer,"226 Close the data socket... \r\n");
+        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+        ns_data = socket(AF_INET, SOCK_STREAM, 0);
+    }
+
+    sy_error=0;
+    return 0;
+}
+
+
+int sgetfun(SOCKET newsocket)
+{
+    int i=4,k=0;
+    char filename[20],temp_buffer[80];
+    char *p_filename=order;
+    FILE *fp;
+
+    printf("RETR mode.\r\n");
+    // identify the filename from rbuffer after the word "RETR "
+    while (1) // while loop 4
+    {
+        //RECEIVE
+        bytes = recv(newsocket, &rbuffer[i], 1, 0);
+        if ((bytes < 0) || (bytes == 0))
+            break;
+
+        filename[k]=rbuffer[i];
+        if (rbuffer[i] == '\0')
+        {   /*end on LF*/
+            filename[k] = '\0';
+            break;
+        }
+
+        if (rbuffer[i] != '\r')
+        {
+            i++;
+            k++;/*ignore CR's*/
+        }
+    } // end of while loop 4
+
+    order[0]='\0';
+    strcat(order,path);
+    if(strlen(path)>0)
+        strcat(order,"\\");
+    strcat(order,filename);
+
+
+    if( (fp=fopen(p_filename,"r")) == NULL )
+    {
+        sprintf(sbuffer, "Sorry, cannot open %s. Please try again.\r\n",filename);
+        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+        sprintf(sbuffer, "226 Transfer completed... \r");
+        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+        return 1;
+    }
+    else
+    {
+        printf("The file %s found,ready to transfer.\n",filename);
+        sprintf(sbuffer, "125 Transfering... \r\n");
+        bytes = send(newsocket, sbuffer, strlen(sbuffer), 0);
+        while (fgets(temp_buffer,80,fp)!=NULL)
+        {
+            sprintf(sbuffer,"%s",temp_buffer); //
+            if(port_connect==0)
+                send(newsocket, sbuffer, strlen(sbuffer), 0);
+        }//end of while
+
+        fclose(fp);
+
+    }
+
+    sy_error=0;
+    return 0;
+}
+
+
+
+
+
+void HandleError(char *func)
+{
+    char info[65]= {0};
+    _snprintf(info, 64, "%s: %d\n", func, WSAGetLastError());
+    printf(info);
+}
+
+////////////////////////////////////////////////////////////////
